@@ -1,0 +1,6 @@
+@InnPay.API_HostAddress = http://localhost:5248
+
+GET {{InnPay.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
