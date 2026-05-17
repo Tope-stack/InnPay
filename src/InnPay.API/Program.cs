@@ -59,18 +59,18 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
-{
+//if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+//{
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
-}
+//}
 
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+//}
 
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseCors("AllowMobileApp");

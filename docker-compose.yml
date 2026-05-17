@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: innpay_postgres
+    environment:
+      POSTGRES_USER: innpay_user
+      POSTGRES_PASSWORD: uIejoI6Vr3gQ5L9nDVoEjCrbtsq6ZMRs
+      POSTGRES_DB: innpay_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U innpay_user -d innpay_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - innpay_network
+    restart: unless-stopped
+
+  # InnPay API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: innpay_api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=innpay_db;Username=innpay_user;Password=uIejoI6Vr3gQ5L9nDVoEjCrbtsq6ZMRs
+      Jwt__Key: ${JWT_SECRET_KEY:-CHANGE_THIS_TO_A_STRONG_256_BIT_SECRET_KEY_IN_PRODUCTION}
+      Jwt__Issuer: InnPay
+      Jwt__Audience: InnPayMobileApp
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - innpay_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  innpay_network:
+    driver: bridge
