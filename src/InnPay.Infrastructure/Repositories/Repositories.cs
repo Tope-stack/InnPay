@@ -100,26 +100,7 @@ public class KycDocumentRepository : IKycDocumentRepository
 
 // ─── WALLET ───────────────────────────────────────────────────────────────────
 
-public class WalletRepository : IWalletRepository
-{
-    private readonly AppDbContext _db;
-    public WalletRepository(AppDbContext db) => _db = db;
 
-    public Task<Wallet?> GetByAccountAndCurrencyAsync(Guid accountId, WalletCurrency currency)
-        => _db.Wallets.FirstOrDefaultAsync(w => w.AccountId == accountId && w.Currency == currency);
-
-    public async Task<IEnumerable<Wallet>> GetByAccountIdAsync(Guid accountId)
-        => await _db.Wallets.Where(w => w.AccountId == accountId).ToListAsync();
-
-    public async Task AddAsync(Wallet wallet)
-        => await _db.Wallets.AddAsync(wallet);
-
-    public Task UpdateAsync(Wallet wallet)
-    {
-        _db.Wallets.Update(wallet);
-        return Task.CompletedTask;
-    }
-}
 
 // ─── OTP ──────────────────────────────────────────────────────────────────────
 

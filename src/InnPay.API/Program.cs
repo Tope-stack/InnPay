@@ -42,7 +42,7 @@ builder.Services
     .AddDatabase(builder.Configuration)
     .AddRepositories()
     .AddApplicationServices()
-    .AddInfrastructureServices()
+    .AddInfrastructureServices(builder.Configuration)
     .AddCustomAuth(builder.Configuration);
 
 builder.Services.AddCors(options =>

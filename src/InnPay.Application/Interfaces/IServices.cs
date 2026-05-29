@@ -37,7 +37,7 @@ public interface IKycService
 
 public interface IOtpService
 {
-    Task<string> GenerateAndSendOtpAsync(Guid userId, string phoneNumber, Domain.Enums.OtpPurpose purpose);
+    Task<string> GenerateAndSendOtpAsync(Guid userId, string phoneNumber, string email, Domain.Enums.OtpPurpose purpose);
     Task<bool> ValidateOtpAsync(Guid userId, string code, Domain.Enums.OtpPurpose purpose);
 }
 

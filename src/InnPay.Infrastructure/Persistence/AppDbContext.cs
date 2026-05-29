@@ -14,6 +14,11 @@ public class AppDbContext : DbContext
     public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
     public DbSet<OtpCode> OtpCodes => Set<OtpCode>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    // Currency module
+    public DbSet<FxRate> FxRates => Set<FxRate>();
+    public DbSet<FxRateLock> FxRateLocks => Set<FxRateLock>();
+    public DbSet<FxTransaction> FxTransactions => Set<FxTransaction>();
+    public DbSet<CurrencyPairConfig> CurrencyPairConfigs => Set<CurrencyPairConfig>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

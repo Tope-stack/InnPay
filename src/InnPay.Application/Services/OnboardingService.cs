@@ -69,7 +69,7 @@ public class OnboardingService : IOnboardingService
         await _uow.SaveChangesAsync();
 
         // Send OTP
-        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, OtpPurpose.PhoneVerification);
+        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, user.Email, OtpPurpose.PhoneVerification);
 
         return ServiceResult<RegisterResponse>.Success(new RegisterResponse
         {
@@ -130,7 +130,7 @@ public class OnboardingService : IOnboardingService
         await _uow.Wallets.AddAsync(ngnWallet);
         await _uow.SaveChangesAsync();
 
-        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, OtpPurpose.PhoneVerification);
+        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, user.Email, OtpPurpose.PhoneVerification);
 
         return ServiceResult<RegisterResponse>.Success(new RegisterResponse
         {
@@ -179,7 +179,7 @@ public class OnboardingService : IOnboardingService
         await _uow.Accounts.AddAsync(account);
         await _uow.SaveChangesAsync();
 
-        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, OtpPurpose.PhoneVerification);
+        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, user.Email, OtpPurpose.PhoneVerification);
 
         return ServiceResult<RegisterResponse>.Success(new RegisterResponse
         {
@@ -231,7 +231,7 @@ public class OnboardingService : IOnboardingService
 
         // Invalidate existing OTPs for this purpose
         await _uow.Otps.InvalidateAllForUserAsync(user.Id, purpose);
-        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, purpose);
+        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, user.Email, purpose);
 
         return ServiceResult<OtpResponse>.Success(new OtpResponse
         {

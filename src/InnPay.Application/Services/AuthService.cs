@@ -123,7 +123,7 @@ public class AuthService : IAuthService
             });
 
         await _uow.Otps.InvalidateAllForUserAsync(user.Id, OtpPurpose.PasswordReset);
-        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, OtpPurpose.PasswordReset);
+        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, user.Email,OtpPurpose.PasswordReset);
 
         return ServiceResult<OtpResponse>.Success(new OtpResponse
         {

@@ -4,6 +4,7 @@ using InnPay.Domain.Interfaces;
 using InnPay.Infrastructure.Persistence;
 using InnPay.Infrastructure.Repositories;
 using InnPay.Infrastructure.Services;
+using InnPay.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 
 namespace InnPay.API.Extensions;
@@ -32,15 +33,30 @@ public static class ServiceExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IKycService, KycService>();
         services.AddScoped<IOtpService, OtpService>();
+        // Currency module
+        services.AddScoped<IWalletService, WalletService>();
+        services.AddScoped<IFxRateService, FxRateService>();
+        services.AddScoped<IFxConversionService, FxConversionService>();
+        services.AddScoped<ICurrencyPairConfigService, CurrencyPairConfigService>();
         return services;
     }
 
-    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<ISmsService, ConsoleSmsService>();  // swap with TermiiSmsService in prod
+                                                               // FX provider — registered as typed HttpClient
+        services.AddHttpClient<IFxProviderService, OpenExchangeRatesFxProvider>();
+
+        // Background job: refresh FX rates every 60 s
+        services.AddHostedService<FxRateRefreshJob>();
+
+        services.Configure<ZohoSmtpSettings>(configuration.GetSection("ZohoSmtp"));
+
+        services.AddScoped<IEmailService, ZohoEmailService>();
+
         return services;
     }
 

@@ -87,3 +87,36 @@ public enum AccountStatus
     Suspended = 2,
     Closed = 3
 }
+
+public enum WalletStatus
+{
+    Active = 1,
+    Frozen = 2,
+    Closed = 3
+}
+
+/// <summary>
+/// Model A = sub-wallet inside an account (wallet reference only).
+/// Model B = standalone dedicated currency account with its own IBAN / sort code.
+/// </summary>
+public enum CurrencyAccountModel
+{
+    WalletModel = 1,       // Model A — Personal / Business default
+    StandaloneAccount = 2  // Model B — Corporate / upgraded Business
+}
+
+public enum FxConversionStatus
+{
+    Pending = 0,
+    Completed = 1,
+    Failed = 2,
+    Expired = 3    // rate lock window elapsed before confirmation
+}
+
+public enum FxRateSource
+{
+    OpenExchangeRates = 1,
+    FixerIo = 2,
+    Manual = 3     // admin-set override rate
+}
+

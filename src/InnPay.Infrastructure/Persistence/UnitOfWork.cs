@@ -1,3 +1,4 @@
+using InnPay.Domain.Entities;
 using InnPay.Domain.Interfaces;
 using InnPay.Infrastructure.Persistence;
 using InnPay.Infrastructure.Repositories;
@@ -17,6 +18,10 @@ public class UnitOfWork : IUnitOfWork
         Wallets = new WalletRepository(db);
         Otps = new OtpRepository(db);
         RefreshTokens = new RefreshTokenRepository(db);
+        FxRates = new FxRateRepository(db);
+        FxRateLocks = new FxRateLockRepository(db);
+        FxTransactions = new FxTransactionRepository(db);
+        CurrencyPairConfigs = new CurrencyPairConfigRepository(db);
     }
 
     public IUserRepository Users { get; }
@@ -25,6 +30,13 @@ public class UnitOfWork : IUnitOfWork
     public IWalletRepository Wallets { get; }
     public IOtpRepository Otps { get; }
     public IRefreshTokenRepository RefreshTokens { get; }
+
+
+    // Currency module
+    public IFxRateRepository FxRates { get; }
+    public IFxRateLockRepository FxRateLocks { get; }
+    public IFxTransactionRepository FxTransactions { get; }
+    public ICurrencyPairConfigRepository CurrencyPairConfigs { get; }
 
     public Task<int> SaveChangesAsync() => _db.SaveChangesAsync();
 }

@@ -33,11 +33,52 @@ public interface IKycDocumentRepository
 
 public interface IWalletRepository
 {
+    Task<Wallet?> GetByIdAsync(Guid id);
     Task<Wallet?> GetByAccountAndCurrencyAsync(Guid accountId, WalletCurrency currency);
     Task<IEnumerable<Wallet>> GetByAccountIdAsync(Guid accountId);
     Task AddAsync(Wallet wallet);
     Task UpdateAsync(Wallet wallet);
 }
+
+public interface IFxRateRepository
+{
+    /// <summary>Returns the most recently fetched non-expired rate for this pair.</summary>
+    Task<FxRate?> GetLatestAsync(WalletCurrency from, WalletCurrency to);
+
+    /// <summary>Returns all latest rates keyed by pair — used by GET /fx/rates.</summary>
+    Task<IEnumerable<FxRate>> GetAllLatestAsync();
+
+    Task AddAsync(FxRate rate);
+
+    /// <summary>Bulk insert a fresh set of rates fetched from the provider.</summary>
+    Task BulkAddAsync(IEnumerable<FxRate> rates);
+}
+
+public interface IFxRateLockRepository
+{
+    Task<FxRateLock?> GetByIdAsync(Guid lockId);
+    Task<FxRateLock?> GetActiveByAccountAsync(Guid accountId, WalletCurrency from, WalletCurrency to);
+    Task AddAsync(FxRateLock rateLock);
+    Task UpdateAsync(FxRateLock rateLock);
+}
+
+public interface IFxTransactionRepository
+{
+    Task<FxTransaction?> GetByIdAsync(Guid id);
+    Task<FxTransaction?> GetByReferenceAsync(string reference);
+    Task<IEnumerable<FxTransaction>> GetByAccountIdAsync(Guid accountId, int page = 1, int pageSize = 20);
+    Task AddAsync(FxTransaction transaction);
+    Task UpdateAsync(FxTransaction transaction);
+}
+
+public interface ICurrencyPairConfigRepository
+{
+    Task<CurrencyPairConfig?> GetAsync(WalletCurrency from, WalletCurrency to);
+    Task<IEnumerable<CurrencyPairConfig>> GetAllActiveAsync();
+    Task AddAsync(CurrencyPairConfig config);
+    Task UpdateAsync(CurrencyPairConfig config);
+}
+
 
 public interface IOtpRepository
 {
@@ -63,5 +104,11 @@ public interface IUnitOfWork
     IWalletRepository Wallets { get; }
     IOtpRepository Otps { get; }
     IRefreshTokenRepository RefreshTokens { get; }
+
+    // Currency module
+    IFxRateRepository FxRates { get; }
+    IFxRateLockRepository FxRateLocks { get; }
+    IFxTransactionRepository FxTransactions { get; }
+    ICurrencyPairConfigRepository CurrencyPairConfigs { get; }
     Task<int> SaveChangesAsync();
 }
