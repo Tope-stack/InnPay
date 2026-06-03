@@ -39,9 +39,9 @@ namespace InnPay.API.Controllers
         [HttpGet("{accountId:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetWallets(Guid accountId)
+        public async Task<IActionResult> GetWallets(Guid accountId, CancellationToken cancellationToken)
         {
-            var result = await _walletService.GetWalletsAsync(accountId);
+            var result = await _walletService.GetWalletsAsync(accountId, cancellationToken);
             return FromResult(result);
         }
 
@@ -59,12 +59,12 @@ namespace InnPay.API.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<IActionResult> ActivateWallet([FromBody] ActivateWalletRequest request)
+        public async Task<IActionResult> ActivateWallet([FromBody] ActivateWalletRequest request, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _walletService.ActivateWalletAsync(request);
+            var result = await _walletService.ActivateWalletAsync(request, cancellationToken);
             return FromResult(result);
         }
 
@@ -83,12 +83,12 @@ namespace InnPay.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
-        public async Task<IActionResult> InitiateConversion([FromBody] InitiateConversionRequest request)
+        public async Task<IActionResult> InitiateConversion([FromBody] InitiateConversionRequest request, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _conversionService.InitiateConversionAsync(request);
+            var result = await _conversionService.InitiateConversionAsync(request, cancellationToken);
             return FromResult(result);
         }
 
@@ -107,12 +107,12 @@ namespace InnPay.API.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-        public async Task<IActionResult> ConfirmConversion([FromBody] ConfirmConversionRequest request)
+        public async Task<IActionResult> ConfirmConversion([FromBody] ConfirmConversionRequest request, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _conversionService.ConfirmConversionAsync(request);
+            var result = await _conversionService.ConfirmConversionAsync(request, cancellationToken);
             return FromResult(result);
         }
 
@@ -128,12 +128,13 @@ namespace InnPay.API.Controllers
         public async Task<IActionResult> GetConversionHistory(
             Guid accountId,
             [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20)
+            [FromQuery] int pageSize = 20,
+            CancellationToken cancellationToken = default)
         {
             if (page < 1) page = 1;
             if (pageSize is < 1 or > 100) pageSize = 20;
 
-            var result = await _conversionService.GetConversionHistoryAsync(accountId, page, pageSize);
+            var result = await _conversionService.GetConversionHistoryAsync(accountId, page, pageSize, cancellationToken);
             return FromResult(result);
         }
 
@@ -145,9 +146,9 @@ namespace InnPay.API.Controllers
         /// </summary>
         [HttpGet("config/pairs")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetPairConfigs()
+        public async Task<IActionResult> GetPairConfigs(CancellationToken cancellationToken)
         {
-            var result = await _pairConfigService.GetAllConfigsAsync();
+            var result = await _pairConfigService.GetAllConfigsAsync(cancellationToken);
             return FromResult(result);
         }
 
@@ -159,12 +160,12 @@ namespace InnPay.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpsertPairConfig([FromBody] UpsertCurrencyPairConfigRequest request)
+        public async Task<IActionResult> UpsertPairConfig([FromBody] UpsertCurrencyPairConfigRequest request, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _pairConfigService.UpsertConfigAsync(request);
+            var result = await _pairConfigService.UpsertConfigAsync(request, cancellationToken);
             return FromResult(result);
         }
 
@@ -175,9 +176,9 @@ namespace InnPay.API.Controllers
         [HttpPut("{walletId:guid}/status")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> SetWalletStatus(Guid walletId, [FromQuery] WalletStatus status)
+        public async Task<IActionResult> SetWalletStatus(Guid walletId, [FromQuery] WalletStatus status, CancellationToken cancellationToken)
         {
-            var result = await _walletService.SetWalletStatusAsync(walletId, status);
+            var result = await _walletService.SetWalletStatusAsync(walletId, status, cancellationToken);
             return FromResult(result);
         }
     }

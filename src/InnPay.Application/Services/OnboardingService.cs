@@ -5,6 +5,7 @@ using InnPay.Application.Interfaces;
 using InnPay.Domain.Entities;
 using InnPay.Domain.Enums;
 using InnPay.Domain.Interfaces;
+using System.Security.Cryptography;
 
 namespace InnPay.Application.Services;
 
@@ -23,9 +24,8 @@ public class OnboardingService : IOnboardingService
 
     // ─── PERSONAL ────────────────────────────────────────────────────────────
 
-    public async Task<ServiceResult<RegisterResponse>> RegisterPersonalAsync(RegisterPersonalRequest request)
+    public async Task<ServiceResult<RegisterResponse>> RegisterPersonalAsync(RegisterPersonalRequest request, CancellationToken cancellationToken = default)
     {
-        // Duplicate checks
         if (await _uow.Users.EmailExistsAsync(request.Email))
             return ServiceResult<RegisterResponse>.Fail("Email is already registered.", 409);
 
@@ -66,10 +66,9 @@ public class OnboardingService : IOnboardingService
         };
 
         await _uow.Wallets.AddAsync(ngnWallet);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
-        // Send OTP
-        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, user.Email, OtpPurpose.PhoneVerification);
+        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, user.Email, OtpPurpose.PhoneVerification, cancellationToken);
 
         return ServiceResult<RegisterResponse>.Success(new RegisterResponse
         {
@@ -82,7 +81,7 @@ public class OnboardingService : IOnboardingService
 
     // ─── BUSINESS ────────────────────────────────────────────────────────────
 
-    public async Task<ServiceResult<RegisterResponse>> RegisterBusinessAsync(RegisterBusinessRequest request)
+    public async Task<ServiceResult<RegisterResponse>> RegisterBusinessAsync(RegisterBusinessRequest request, CancellationToken cancellationToken = default)
     {
         if (await _uow.Users.EmailExistsAsync(request.Email))
             return ServiceResult<RegisterResponse>.Fail("Email is already registered.", 409);
@@ -128,9 +127,9 @@ public class OnboardingService : IOnboardingService
         };
 
         await _uow.Wallets.AddAsync(ngnWallet);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
-        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, user.Email, OtpPurpose.PhoneVerification);
+        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, user.Email, OtpPurpose.PhoneVerification, cancellationToken);
 
         return ServiceResult<RegisterResponse>.Success(new RegisterResponse
         {
@@ -143,7 +142,7 @@ public class OnboardingService : IOnboardingService
 
     // ─── CORPORATE ───────────────────────────────────────────────────────────
 
-    public async Task<ServiceResult<RegisterResponse>> RegisterCorporateAsync(RegisterCorporateRequest request)
+    public async Task<ServiceResult<RegisterResponse>> RegisterCorporateAsync(RegisterCorporateRequest request, CancellationToken cancellationToken = default)
     {
         if (await _uow.Users.EmailExistsAsync(request.Email))
             return ServiceResult<RegisterResponse>.Fail("Email is already registered.", 409);
@@ -177,9 +176,9 @@ public class OnboardingService : IOnboardingService
         };
 
         await _uow.Accounts.AddAsync(account);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
-        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, user.Email, OtpPurpose.PhoneVerification);
+        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, user.Email, OtpPurpose.PhoneVerification, cancellationToken);
 
         return ServiceResult<RegisterResponse>.Success(new RegisterResponse
         {
@@ -192,12 +191,12 @@ public class OnboardingService : IOnboardingService
 
     // ─── OTP VERIFICATION ────────────────────────────────────────────────────
 
-    public async Task<ServiceResult<OtpResponse>> VerifyPhoneOtpAsync(VerifyOtpRequest request)
+    public async Task<ServiceResult<OtpResponse>> VerifyPhoneOtpAsync(VerifyOtpRequest request, CancellationToken cancellationToken = default)
     {
         if (!Enum.TryParse<OtpPurpose>(request.Purpose, true, out var purpose))
             return ServiceResult<OtpResponse>.Fail("Invalid OTP purpose.");
 
-        var isValid = await _otpService.ValidateOtpAsync(request.UserId, request.Code, purpose);
+        var isValid = await _otpService.ValidateOtpAsync(request.UserId, request.Code, purpose, cancellationToken);
         if (!isValid)
             return ServiceResult<OtpResponse>.Fail("Invalid or expired OTP code.", 422);
 
@@ -210,7 +209,7 @@ public class OnboardingService : IOnboardingService
             user.IsPhoneVerified = true;
             user.UpdatedAt = DateTime.UtcNow;
             await _uow.Users.UpdateAsync(user);
-            await _uow.SaveChangesAsync();
+            await _uow.SaveChangesAsync(cancellationToken);
         }
 
         return ServiceResult<OtpResponse>.Success(new OtpResponse
@@ -220,7 +219,7 @@ public class OnboardingService : IOnboardingService
         });
     }
 
-    public async Task<ServiceResult<OtpResponse>> ResendOtpAsync(ResendOtpRequest request)
+    public async Task<ServiceResult<OtpResponse>> ResendOtpAsync(ResendOtpRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _uow.Users.GetByIdAsync(request.UserId);
         if (user is null)
@@ -229,9 +228,8 @@ public class OnboardingService : IOnboardingService
         if (!Enum.TryParse<OtpPurpose>(request.Purpose, true, out var purpose))
             return ServiceResult<OtpResponse>.Fail("Invalid OTP purpose.");
 
-        // Invalidate existing OTPs for this purpose
         await _uow.Otps.InvalidateAllForUserAsync(user.Id, purpose);
-        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, user.Email, purpose);
+        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, user.Email, purpose, cancellationToken);
 
         return ServiceResult<OtpResponse>.Success(new OtpResponse
         {
@@ -242,7 +240,7 @@ public class OnboardingService : IOnboardingService
 
     // ─── TRANSACTION PIN ─────────────────────────────────────────────────────
 
-    public async Task<ServiceResult<OtpResponse>> SetTransactionPinAsync(SetTransactionPinRequest request)
+    public async Task<ServiceResult<OtpResponse>> SetTransactionPinAsync(SetTransactionPinRequest request, CancellationToken cancellationToken = default)
     {
         if (request.Pin != request.ConfirmPin)
             return ServiceResult<OtpResponse>.Fail("PINs do not match.");
@@ -255,12 +253,11 @@ public class OnboardingService : IOnboardingService
             return ServiceResult<OtpResponse>.Fail("Phone number must be verified before setting a PIN.", 422);
 
         user.TransactionPinHash = _passwordHasher.Hash(request.Pin);
-        user.Status = AccountStatus.Active;    // user is now fully active
+        user.Status = AccountStatus.Active;
         user.UpdatedAt = DateTime.UtcNow;
 
         await _uow.Users.UpdateAsync(user);
 
-        // Also activate the account now that user setup is complete
         var account = await _uow.Accounts.GetByUserIdAsync(user.Id);
         if (account is not null && account.AccountType == AccountType.Personal)
         {
@@ -269,7 +266,7 @@ public class OnboardingService : IOnboardingService
             await _uow.Accounts.UpdateAsync(account);
         }
 
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
         return ServiceResult<OtpResponse>.Success(new OtpResponse
         {
@@ -280,7 +277,7 @@ public class OnboardingService : IOnboardingService
 
     // ─── GET ACCOUNT ─────────────────────────────────────────────────────────
 
-    public async Task<ServiceResult<AccountResponse>> GetAccountAsync(Guid accountId)
+    public async Task<ServiceResult<AccountResponse>> GetAccountAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
         var account = await _uow.Accounts.GetByIdAsync(accountId);
         if (account is null)
@@ -315,9 +312,9 @@ public class OnboardingService : IOnboardingService
 
     private static string GenerateAccountNumber()
     {
-        // Format: INN + 10 random digits
-        var random = new Random();
-        var digits = string.Concat(Enumerable.Range(0, 10).Select(_ => random.Next(0, 10).ToString()));
+        // Format: INN + 10 random digits — uses CSPRNG, thread-safe
+        var digits = string.Concat(
+            Enumerable.Range(0, 10).Select(_ => RandomNumberGenerator.GetInt32(0, 10).ToString()));
         return $"INN{digits}";
     }
 }

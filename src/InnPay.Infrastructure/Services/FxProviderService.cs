@@ -39,7 +39,7 @@ namespace InnPay.Infrastructure.Services
             _logger = logger;
         }
 
-        public async Task<IEnumerable<ExternalRateDto>> FetchRatesAsync()
+        public async Task<IEnumerable<ExternalRateDto>> FetchRatesAsync(CancellationToken cancellationToken = default)
         {
             var appId = _config["FxProvider:OpenExchangeRates:AppId"];
             if (string.IsNullOrEmpty(appId))
@@ -51,7 +51,7 @@ namespace InnPay.Infrastructure.Services
             try
             {
                 var url = $"https://openexchangerates.org/api/latest.json?app_id={appId}&symbols=NGN,EUR,GBP";
-                var response = await _http.GetAsync(url);
+                var response = await _http.GetAsync(url, cancellationToken);
                 response.EnsureSuccessStatusCode();
 
                 var body = await response.Content.ReadAsStringAsync();
@@ -145,23 +145,23 @@ namespace InnPay.Infrastructure.Services
             _logger.LogInformation("FX rate refresh job started. Interval: {Interval}s.", RefreshInterval.TotalSeconds);
 
             // Initial fetch on startup
-            await RefreshAsync();
+            await RefreshAsync(stoppingToken);
 
             using var timer = new PeriodicTimer(RefreshInterval);
             while (!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
             {
-                await RefreshAsync();
+                await RefreshAsync(stoppingToken);
             }
         }
 
-        private async Task RefreshAsync()
+        private async Task RefreshAsync(CancellationToken stoppingToken)
         {
             using var scope = _scopeFactory.CreateScope();
             var fxService = scope.ServiceProvider.GetRequiredService<IFxRateService>();
 
             try
             {
-                await fxService.RefreshRatesAsync();
+                await fxService.RefreshRatesAsync(stoppingToken);
             }
             catch (Exception ex)
             {

@@ -25,12 +25,12 @@ public class OnboardingController : BaseController
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> RegisterPersonal([FromBody] RegisterPersonalRequest request)
+    public async Task<IActionResult> RegisterPersonal([FromBody] RegisterPersonalRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _onboarding.RegisterPersonalAsync(request);
+        var result = await _onboarding.RegisterPersonalAsync(request, cancellationToken);
         return FromResult(result);
     }
 
@@ -40,12 +40,12 @@ public class OnboardingController : BaseController
     [HttpPost("business/register")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> RegisterBusiness([FromBody] RegisterBusinessRequest request)
+    public async Task<IActionResult> RegisterBusiness([FromBody] RegisterBusinessRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _onboarding.RegisterBusinessAsync(request);
+        var result = await _onboarding.RegisterBusinessAsync(request, cancellationToken);
         return FromResult(result);
     }
 
@@ -55,12 +55,12 @@ public class OnboardingController : BaseController
     [HttpPost("corporate/register")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> RegisterCorporate([FromBody] RegisterCorporateRequest request)
+    public async Task<IActionResult> RegisterCorporate([FromBody] RegisterCorporateRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _onboarding.RegisterCorporateAsync(request);
+        var result = await _onboarding.RegisterCorporateAsync(request, cancellationToken);
         return FromResult(result);
     }
 
@@ -70,24 +70,24 @@ public class OnboardingController : BaseController
     [HttpPost("verify-otp")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request)
+    public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _onboarding.VerifyPhoneOtpAsync(request);
+        var result = await _onboarding.VerifyPhoneOtpAsync(request, cancellationToken);
         return FromResult(result);
     }
 
     /// <summary>Resend OTP to the user's phone number.</summary>
     [HttpPost("resend-otp")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> ResendOtp([FromBody] ResendOtpRequest request)
+    public async Task<IActionResult> ResendOtp([FromBody] ResendOtpRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _onboarding.ResendOtpAsync(request);
+        var result = await _onboarding.ResendOtpAsync(request, cancellationToken);
         return FromResult(result);
     }
 
@@ -97,12 +97,12 @@ public class OnboardingController : BaseController
     [HttpPost("set-pin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> SetTransactionPin([FromBody] SetTransactionPinRequest request)
+    public async Task<IActionResult> SetTransactionPin([FromBody] SetTransactionPinRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _onboarding.SetTransactionPinAsync(request);
+        var result = await _onboarding.SetTransactionPinAsync(request, cancellationToken);
         return FromResult(result);
     }
 
@@ -113,9 +113,9 @@ public class OnboardingController : BaseController
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetAccount(Guid accountId)
+    public async Task<IActionResult> GetAccount(Guid accountId, CancellationToken cancellationToken)
     {
-        var result = await _onboarding.GetAccountAsync(accountId);
+        var result = await _onboarding.GetAccountAsync(accountId, cancellationToken);
         return FromResult(result);
     }
 }

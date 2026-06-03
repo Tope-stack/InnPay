@@ -16,9 +16,9 @@ public class KycController : BaseController
     [HttpGet("{accountId:guid}/status")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetStatus(Guid accountId)
+    public async Task<IActionResult> GetStatus(Guid accountId, CancellationToken cancellationToken)
     {
-        var result = await _kyc.GetKycStatusAsync(accountId);
+        var result = await _kyc.GetKycStatusAsync(accountId, cancellationToken);
         return FromResult(result);
     }
 
@@ -31,12 +31,12 @@ public class KycController : BaseController
     [HttpPost("personal/tier1")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> SubmitPersonalTier1([FromBody] UploadPersonalKycTier1Request request)
+    public async Task<IActionResult> SubmitPersonalTier1([FromBody] UploadPersonalKycTier1Request request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _kyc.SubmitPersonalKycTier1Async(request);
+        var result = await _kyc.SubmitPersonalKycTier1Async(request, cancellationToken);
         return FromResult(result);
     }
 
@@ -48,12 +48,12 @@ public class KycController : BaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> SubmitPersonalTier2([FromBody] UploadPersonalKycTier2Request request)
+    public async Task<IActionResult> SubmitPersonalTier2([FromBody] UploadPersonalKycTier2Request request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _kyc.SubmitPersonalKycTier2Async(request);
+        var result = await _kyc.SubmitPersonalKycTier2Async(request, cancellationToken);
         return FromResult(result);
     }
 
@@ -66,12 +66,12 @@ public class KycController : BaseController
     [HttpPost("business")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> SubmitBusinessKyc([FromBody] UploadBusinessKycRequest request)
+    public async Task<IActionResult> SubmitBusinessKyc([FromBody] UploadBusinessKycRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _kyc.SubmitBusinessKycAsync(request);
+        var result = await _kyc.SubmitBusinessKycAsync(request, cancellationToken);
         return FromResult(result);
     }
 
@@ -85,12 +85,12 @@ public class KycController : BaseController
     [HttpPost("corporate")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> SubmitCorporateKyc([FromBody] UploadCorporateKycRequest request)
+    public async Task<IActionResult> SubmitCorporateKyc([FromBody] UploadCorporateKycRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _kyc.SubmitCorporateKycAsync(request);
+        var result = await _kyc.SubmitCorporateKycAsync(request, cancellationToken);
         return FromResult(result);
     }
 
@@ -103,12 +103,12 @@ public class KycController : BaseController
     [HttpPost("review")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ReviewDocument([FromBody] ReviewKycDocumentRequest request)
+    public async Task<IActionResult> ReviewDocument([FromBody] ReviewKycDocumentRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _kyc.ReviewDocumentAsync(request);
+        var result = await _kyc.ReviewDocumentAsync(request, cancellationToken);
         return FromResult(result);
     }
 }
