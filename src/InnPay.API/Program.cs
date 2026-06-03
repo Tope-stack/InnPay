@@ -1,5 +1,6 @@
 using InnPay.API.Extensions;
 using InnPay.API.Middleware;
+using InnPay.Application.Interfaces;
 using InnPay.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -62,11 +63,15 @@ var app = builder.Build();
 //if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
 //{
     using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var db     = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
     await db.Database.MigrateAsync();
+    await DataSeeder.SeedAsync(db, hasher, logger);
 //}
 
-//if (app.Environment.IsDevelopment())
+//if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
 //{
     app.UseSwagger();
     app.UseSwaggerUI();

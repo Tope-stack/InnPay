@@ -23,9 +23,9 @@ namespace InnPay.API.Controllers
         /// </summary>
         [HttpGet("rates")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAllRates()
+        public async Task<IActionResult> GetAllRates(CancellationToken cancellationToken)
         {
-            var result = await _fxRateService.GetAllRatesAsync();
+            var result = await _fxRateService.GetAllRatesAsync(cancellationToken);
             return FromResult(result);
         }
 
@@ -36,9 +36,9 @@ namespace InnPay.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
-        public async Task<IActionResult> GetRate(WalletCurrency fromCurrency, WalletCurrency toCurrency)
+        public async Task<IActionResult> GetRate(WalletCurrency fromCurrency, WalletCurrency toCurrency, CancellationToken cancellationToken)
         {
-            var result = await _fxRateService.GetRateAsync(fromCurrency, toCurrency);
+            var result = await _fxRateService.GetRateAsync(fromCurrency, toCurrency, cancellationToken);
             return FromResult(result);
         }
     }

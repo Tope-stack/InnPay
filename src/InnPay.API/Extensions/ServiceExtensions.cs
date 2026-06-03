@@ -47,14 +47,14 @@ public static class ServiceExtensions
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<ISmsService, ConsoleSmsService>();  // swap with TermiiSmsService in prod
-                                                               // FX provider — registered as typed HttpClient
+
+        // FX provider — registered as typed HttpClient
         services.AddHttpClient<IFxProviderService, OpenExchangeRatesFxProvider>();
 
         // Background job: refresh FX rates every 60 s
         services.AddHostedService<FxRateRefreshJob>();
 
         services.Configure<ZohoSmtpSettings>(configuration.GetSection("ZohoSmtp"));
-
         services.AddScoped<IEmailService, ZohoEmailService>();
 
         return services;
@@ -62,9 +62,8 @@ public static class ServiceExtensions
 
     public static IServiceCollection AddCustomAuth(this IServiceCollection services, IConfiguration config)
     {
-        // Register JWT bearer authentication using the built-in ASP.NET Core
-        // JWT handler — but our custom JwtMiddleware handles the validation, so
-        // here we just configure the scheme used by [Authorize].
+        // Register JWT bearer authentication using the built-in ASP.NET Core handler.
+        // Token validation is performed here; no custom middleware is needed.
         services.AddAuthentication("Bearer")
             .AddJwtBearer("Bearer", options =>
             {

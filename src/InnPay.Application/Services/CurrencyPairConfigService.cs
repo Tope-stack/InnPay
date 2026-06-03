@@ -1,14 +1,9 @@
-﻿using InnPay.Application.Common;
+using InnPay.Application.Common;
 using InnPay.Application.DTOs.Request;
 using InnPay.Application.DTOs.Response;
 using InnPay.Application.Interfaces;
 using InnPay.Domain.Entities;
 using InnPay.Domain.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace InnPay.Application.Services
 {
@@ -18,14 +13,14 @@ namespace InnPay.Application.Services
 
         public CurrencyPairConfigService(IUnitOfWork uow) => _uow = uow;
 
-        public async Task<ServiceResult<List<CurrencyPairConfigResponse>>> GetAllConfigsAsync()
+        public async Task<ServiceResult<List<CurrencyPairConfigResponse>>> GetAllConfigsAsync(CancellationToken cancellationToken = default)
         {
             var configs = await _uow.CurrencyPairConfigs.GetAllActiveAsync();
             return ServiceResult<List<CurrencyPairConfigResponse>>.Success(
                 configs.Select(MapToDto).ToList());
         }
 
-        public async Task<ServiceResult<CurrencyPairConfigResponse>> UpsertConfigAsync(UpsertCurrencyPairConfigRequest request)
+        public async Task<ServiceResult<CurrencyPairConfigResponse>> UpsertConfigAsync(UpsertCurrencyPairConfigRequest request, CancellationToken cancellationToken = default)
         {
             if (request.FromCurrency == request.ToCurrency)
                 return ServiceResult<CurrencyPairConfigResponse>.Fail("Source and target currencies must differ.");
@@ -47,7 +42,7 @@ namespace InnPay.Application.Services
                 existing.UpdatedAt = DateTime.UtcNow;
 
                 await _uow.CurrencyPairConfigs.UpdateAsync(existing);
-                await _uow.SaveChangesAsync();
+                await _uow.SaveChangesAsync(cancellationToken);
                 return ServiceResult<CurrencyPairConfigResponse>.Success(MapToDto(existing));
             }
 
@@ -64,7 +59,7 @@ namespace InnPay.Application.Services
             };
 
             await _uow.CurrencyPairConfigs.AddAsync(config);
-            await _uow.SaveChangesAsync();
+            await _uow.SaveChangesAsync(cancellationToken);
             return ServiceResult<CurrencyPairConfigResponse>.Success(MapToDto(config), 201);
         }
 

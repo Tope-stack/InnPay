@@ -110,5 +110,5 @@ public interface IUnitOfWork
     IFxRateLockRepository FxRateLocks { get; }
     IFxTransactionRepository FxTransactions { get; }
     ICurrencyPairConfigRepository CurrencyPairConfigs { get; }
-    Task<int> SaveChangesAsync();
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

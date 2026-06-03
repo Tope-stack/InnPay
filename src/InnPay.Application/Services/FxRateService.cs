@@ -47,7 +47,7 @@ namespace InnPay.Application.Services
 
         // ─── GET ALL RATES ────────────────────────────────────────────────────────
 
-        public async Task<ServiceResult<AllFxRatesResponse>> GetAllRatesAsync()
+        public async Task<ServiceResult<AllFxRatesResponse>> GetAllRatesAsync(CancellationToken cancellationToken = default)
         {
             var rates = (await _uow.FxRates.GetAllLatestAsync()).ToList();
 
@@ -64,7 +64,7 @@ namespace InnPay.Application.Services
 
         // ─── GET SINGLE RATE ─────────────────────────────────────────────────────
 
-        public async Task<ServiceResult<FxRateResponse>> GetRateAsync(WalletCurrency from, WalletCurrency to)
+        public async Task<ServiceResult<FxRateResponse>> GetRateAsync(WalletCurrency from, WalletCurrency to, CancellationToken cancellationToken = default)
         {
             if (from == to)
                 return ServiceResult<FxRateResponse>.Fail("Source and target currencies must differ.");
@@ -78,11 +78,11 @@ namespace InnPay.Application.Services
 
         // ─── REFRESH RATES (background job) ──────────────────────────────────────
 
-        public async Task RefreshRatesAsync()
+        public async Task RefreshRatesAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                var externalRates = (await _provider.FetchRatesAsync()).ToList();
+                var externalRates = (await _provider.FetchRatesAsync(cancellationToken)).ToList();
                 if (!externalRates.Any())
                 {
                     _logger.LogWarning("FX provider returned no rates during refresh.");
@@ -126,7 +126,7 @@ namespace InnPay.Application.Services
                 }
 
                 await _uow.FxRates.BulkAddAsync(newRates);
-                await _uow.SaveChangesAsync();
+                await _uow.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation("FX rates refreshed. {Count} pairs updated at {Time}.", newRates.Count, now);
             }

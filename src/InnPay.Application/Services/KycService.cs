@@ -21,7 +21,7 @@ public class KycService : IKycService
 
     // ─── STATUS ──────────────────────────────────────────────────────────────
 
-    public async Task<ServiceResult<KycStatusResponse>> GetKycStatusAsync(Guid accountId)
+    public async Task<ServiceResult<KycStatusResponse>> GetKycStatusAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
         var account = await _uow.Accounts.GetByIdAsync(accountId);
         if (account is null)
@@ -41,7 +41,7 @@ public class KycService : IKycService
 
     // ─── SINGLE DOCUMENT UPLOAD ───────────────────────────────────────────────
 
-    public async Task<ServiceResult<KycDocumentResponse>> UploadDocumentAsync(UploadKycDocumentRequest request)
+    public async Task<ServiceResult<KycDocumentResponse>> UploadDocumentAsync(UploadKycDocumentRequest request, CancellationToken cancellationToken = default)
     {
         var account = await _uow.Accounts.GetByIdAsync(request.AccountId);
         if (account is null)
@@ -63,14 +63,14 @@ public class KycService : IKycService
         };
 
         await _uow.KycDocuments.AddAsync(doc);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
         return ServiceResult<KycDocumentResponse>.Success(MapDocumentResponse(doc), 201);
     }
 
     // ─── PERSONAL KYC TIER 1 ─────────────────────────────────────────────────
 
-    public async Task<ServiceResult<KycStatusResponse>> SubmitPersonalKycTier1Async(UploadPersonalKycTier1Request request)
+    public async Task<ServiceResult<KycStatusResponse>> SubmitPersonalKycTier1Async(UploadPersonalKycTier1Request request, CancellationToken cancellationToken = default)
     {
         var account = await _uow.Accounts.GetByIdAsync(request.AccountId);
         if (account is null)
@@ -111,14 +111,14 @@ public class KycService : IKycService
 
         // Upgrade NGN wallet daily limit upon Tier 1 submission (activated when approved)
         await _uow.Accounts.UpdateAsync(account);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
         return await GetKycStatusAsync(request.AccountId);
     }
 
     // ─── PERSONAL KYC TIER 2 ─────────────────────────────────────────────────
 
-    public async Task<ServiceResult<KycStatusResponse>> SubmitPersonalKycTier2Async(UploadPersonalKycTier2Request request)
+    public async Task<ServiceResult<KycStatusResponse>> SubmitPersonalKycTier2Async(UploadPersonalKycTier2Request request, CancellationToken cancellationToken = default)
     {
         var account = await _uow.Accounts.GetByIdAsync(request.AccountId);
         if (account is null)
@@ -167,14 +167,14 @@ public class KycService : IKycService
         account.UpdatedAt = DateTime.UtcNow;
 
         await _uow.Accounts.UpdateAsync(account);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
         return await GetKycStatusAsync(request.AccountId);
     }
 
     // ─── BUSINESS KYC ────────────────────────────────────────────────────────
 
-    public async Task<ServiceResult<KycStatusResponse>> SubmitBusinessKycAsync(UploadBusinessKycRequest request)
+    public async Task<ServiceResult<KycStatusResponse>> SubmitBusinessKycAsync(UploadBusinessKycRequest request, CancellationToken cancellationToken = default)
     {
         var account = await _uow.Accounts.GetByIdAsync(request.AccountId);
         if (account is null)
@@ -205,14 +205,14 @@ public class KycService : IKycService
         account.UpdatedAt = DateTime.UtcNow;
 
         await _uow.Accounts.UpdateAsync(account);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
         return await GetKycStatusAsync(request.AccountId);
     }
 
     // ─── CORPORATE KYC ───────────────────────────────────────────────────────
 
-    public async Task<ServiceResult<KycStatusResponse>> SubmitCorporateKycAsync(UploadCorporateKycRequest request)
+    public async Task<ServiceResult<KycStatusResponse>> SubmitCorporateKycAsync(UploadCorporateKycRequest request, CancellationToken cancellationToken = default)
     {
         var account = await _uow.Accounts.GetByIdAsync(request.AccountId);
         if (account is null)
@@ -258,14 +258,14 @@ public class KycService : IKycService
         account.UpdatedAt = DateTime.UtcNow;
 
         await _uow.Accounts.UpdateAsync(account);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
         return await GetKycStatusAsync(request.AccountId);
     }
 
     // ─── ADMIN: REVIEW DOCUMENT ───────────────────────────────────────────────
 
-    public async Task<ServiceResult<KycDocumentResponse>> ReviewDocumentAsync(ReviewKycDocumentRequest request)
+    public async Task<ServiceResult<KycDocumentResponse>> ReviewDocumentAsync(ReviewKycDocumentRequest request, CancellationToken cancellationToken = default)
     {
         var doc = await _uow.KycDocuments.GetByIdAsync(request.DocumentId);
         if (doc is null)
@@ -282,7 +282,7 @@ public class KycService : IKycService
         // Check if all documents for this account are approved → upgrade KYC tier
         await TryUpgradeKycTierAsync(doc.AccountId);
 
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
         return ServiceResult<KycDocumentResponse>.Success(MapDocumentResponse(doc));
     }

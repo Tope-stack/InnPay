@@ -37,7 +37,7 @@ namespace InnPay.Application.Services
 
         // ─── STEP 1: INITIATE — lock rate for 30 s ────────────────────────────────
 
-        public async Task<ServiceResult<ConversionPreviewResponse>> InitiateConversionAsync(InitiateConversionRequest request)
+        public async Task<ServiceResult<ConversionPreviewResponse>> InitiateConversionAsync(InitiateConversionRequest request, CancellationToken cancellationToken = default)
         {
             if (request.FromCurrency == request.ToCurrency)
                 return ServiceResult<ConversionPreviewResponse>.Fail("Source and target currencies must differ.");
@@ -117,7 +117,7 @@ namespace InnPay.Application.Services
             };
 
             await _uow.FxRateLocks.AddAsync(rateLock);
-            await _uow.SaveChangesAsync();
+            await _uow.SaveChangesAsync(cancellationToken);
 
             return ServiceResult<ConversionPreviewResponse>.Success(new ConversionPreviewResponse
             {
@@ -138,7 +138,7 @@ namespace InnPay.Application.Services
 
         // ─── STEP 2: CONFIRM — execute the conversion ─────────────────────────────
 
-        public async Task<ServiceResult<ConversionResultResponse>> ConfirmConversionAsync(ConfirmConversionRequest request)
+        public async Task<ServiceResult<ConversionResultResponse>> ConfirmConversionAsync(ConfirmConversionRequest request, CancellationToken cancellationToken = default)
         {
             // ── Fetch and validate rate lock ─────────────────────────────────────
             var rateLock = await _uow.FxRateLocks.GetByIdAsync(request.RateLockId);
@@ -154,7 +154,7 @@ namespace InnPay.Application.Services
             if (rateLock.IsExpired)
             {
                 // Release the reserved funds
-                await ReleaseReservedFundsAsync(rateLock);
+                await ReleaseReservedFundsAsync(rateLock, cancellationToken);
                 return ServiceResult<ConversionResultResponse>.Fail(
                     "The rate lock has expired (30-second window). Please initiate a new conversion.", 422);
             }
@@ -176,7 +176,7 @@ namespace InnPay.Application.Services
             // ── Verify reserved balance still covers the amount ──────────────────
             if (fromWallet.ReservedAmount < rateLock.SourceAmount || fromWallet.Balance < rateLock.SourceAmount)
             {
-                await ReleaseReservedFundsAsync(rateLock);
+                await ReleaseReservedFundsAsync(rateLock, cancellationToken);
                 return ServiceResult<ConversionResultResponse>.Fail("Insufficient balance to complete this conversion.");
             }
 
@@ -228,7 +228,7 @@ namespace InnPay.Application.Services
             // ── Persist ───────────────────────────────────────────────────────────
             fxTx.Status = FxConversionStatus.Completed;
             await _uow.FxTransactions.UpdateAsync(fxTx);
-            await _uow.SaveChangesAsync();
+            await _uow.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation(
                 "FX conversion completed. Ref={Ref} | {From}→{To} | {Source} → {Net} | Fee={Fee}",
@@ -255,7 +255,7 @@ namespace InnPay.Application.Services
         // ─── CONVERSION HISTORY ───────────────────────────────────────────────────
 
         public async Task<ServiceResult<PagedFxTransactionsResponse>> GetConversionHistoryAsync(
-            Guid accountId, int page, int pageSize)
+            Guid accountId, int page, int pageSize, CancellationToken cancellationToken = default)
         {
             var account = await _uow.Accounts.GetByIdAsync(accountId);
             if (account is null)
@@ -301,7 +301,7 @@ namespace InnPay.Application.Services
         }
 
         /// <summary>Release the soft hold placed on the source wallet when a lock expires unused.</summary>
-        private async Task ReleaseReservedFundsAsync(FxRateLock rateLock)
+        private async Task ReleaseReservedFundsAsync(FxRateLock rateLock, CancellationToken cancellationToken)
         {
             var fromWallet = await _uow.Wallets.GetByAccountAndCurrencyAsync(rateLock.AccountId, rateLock.FromCurrency);
             if (fromWallet is null) return;
@@ -315,7 +315,7 @@ namespace InnPay.Application.Services
 
             await _uow.Wallets.UpdateAsync(fromWallet);
             await _uow.FxRateLocks.UpdateAsync(rateLock);
-            await _uow.SaveChangesAsync();
+            await _uow.SaveChangesAsync(cancellationToken);
         }
 
         private static string GenerateReference()

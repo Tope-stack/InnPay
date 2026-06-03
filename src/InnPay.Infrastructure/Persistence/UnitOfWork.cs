@@ -38,5 +38,6 @@ public class UnitOfWork : IUnitOfWork
     public IFxTransactionRepository FxTransactions { get; }
     public ICurrencyPairConfigRepository CurrencyPairConfigs { get; }
 
-    public Task<int> SaveChangesAsync() => _db.SaveChangesAsync();
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        => _db.SaveChangesAsync(cancellationToken);
 }

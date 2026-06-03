@@ -30,7 +30,7 @@ namespace InnPay.Application.Services
 
         // ─── GET WALLETS ─────────────────────────────────────────────────────────
 
-        public async Task<ServiceResult<AccountWalletsResponse>> GetWalletsAsync(Guid accountId)
+        public async Task<ServiceResult<AccountWalletsResponse>> GetWalletsAsync(Guid accountId, CancellationToken cancellationToken = default)
         {
             var account = await _uow.Accounts.GetByIdAsync(accountId);
             if (account is null)
@@ -54,7 +54,7 @@ namespace InnPay.Application.Services
 
         // ─── ACTIVATE WALLET ─────────────────────────────────────────────────────
 
-        public async Task<ServiceResult<WalletDetailResponse>> ActivateWalletAsync(ActivateWalletRequest request)
+        public async Task<ServiceResult<WalletDetailResponse>> ActivateWalletAsync(ActivateWalletRequest request, CancellationToken cancellationToken = default)
         {
             var account = await _uow.Accounts.GetByIdAsync(request.AccountId);
             if (account is null)
@@ -95,7 +95,7 @@ namespace InnPay.Application.Services
                 existing.Status = WalletStatus.Active;
                 existing.UpdatedAt = DateTime.UtcNow;
                 await _uow.Wallets.UpdateAsync(existing);
-                await _uow.SaveChangesAsync();
+                await _uow.SaveChangesAsync(cancellationToken);
                 return ServiceResult<WalletDetailResponse>.Success(MapToDetail(existing));
             }
 
@@ -127,14 +127,14 @@ namespace InnPay.Application.Services
                 AssignStandaloneDetails(wallet);
 
             await _uow.Wallets.AddAsync(wallet);
-            await _uow.SaveChangesAsync();
+            await _uow.SaveChangesAsync(cancellationToken);
 
             return ServiceResult<WalletDetailResponse>.Success(MapToDetail(wallet), 201);
         }
 
         // ─── SET WALLET STATUS (admin) ────────────────────────────────────────────
 
-        public async Task<ServiceResult<WalletDetailResponse>> SetWalletStatusAsync(Guid walletId, WalletStatus status)
+        public async Task<ServiceResult<WalletDetailResponse>> SetWalletStatusAsync(Guid walletId, WalletStatus status, CancellationToken cancellationToken = default)
         {
             var wallet = await _uow.Wallets.GetByIdAsync(walletId);
             if (wallet is null)
@@ -145,7 +145,7 @@ namespace InnPay.Application.Services
             wallet.UpdatedAt = DateTime.UtcNow;
 
             await _uow.Wallets.UpdateAsync(wallet);
-            await _uow.SaveChangesAsync();
+            await _uow.SaveChangesAsync(cancellationToken);
 
             return ServiceResult<WalletDetailResponse>.Success(MapToDetail(wallet));
         }

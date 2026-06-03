@@ -128,7 +128,7 @@ public class OtpService : IOtpService
         _email = email;
     }
 
-    public async Task<string> GenerateAndSendOtpAsync(Guid userId, string phoneNumber, string email, OtpPurpose purpose)
+    public async Task<string> GenerateAndSendOtpAsync(Guid userId, string phoneNumber, string email, OtpPurpose purpose, CancellationToken cancellationToken = default)
     {
         // Invalidate any existing active OTPs for this purpose
         await _uow.Otps.InvalidateAllForUserAsync(userId, purpose);
@@ -146,7 +146,7 @@ public class OtpService : IOtpService
         };
 
         await _uow.Otps.AddAsync(otp);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
         var (smsBody, emailSubject, emailBody) = purpose switch
         {
@@ -191,13 +191,13 @@ public class OtpService : IOtpService
     </div>
     """;
 
-    public async Task<bool> ValidateOtpAsync(Guid userId, string code, OtpPurpose purpose)
+    public async Task<bool> ValidateOtpAsync(Guid userId, string code, OtpPurpose purpose, CancellationToken cancellationToken = default)
     {
         var otp = await _uow.Otps.GetActiveOtpAsync(userId, purpose);
         if (otp is null || otp.Code != code) return false;
 
         await _uow.Otps.MarkUsedAsync(otp.Id);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
         return true;
     }
 
@@ -218,7 +218,7 @@ public class LocalFileStorageService : IFileStorageService
         Directory.CreateDirectory(_basePath);
     }
 
-    public async Task<string> UploadAsync(string base64Content, string fileName, string contentType, string folder)
+    public async Task<string> UploadAsync(string base64Content, string fileName, string contentType, string folder, CancellationToken cancellationToken = default)
     {
         var sanitizedFolder = SanitizePath(folder);
         var directory = Path.Combine(_basePath, sanitizedFolder);
@@ -229,13 +229,13 @@ public class LocalFileStorageService : IFileStorageService
         var filePath = Path.Combine(directory, uniqueFileName);
 
         var bytes = Convert.FromBase64String(base64Content);
-        await File.WriteAllBytesAsync(filePath, bytes);
+        await File.WriteAllBytesAsync(filePath, bytes, cancellationToken);
 
         // Return a relative URL path; prefix with a CDN/API base in production
         return $"/uploads/{sanitizedFolder}/{uniqueFileName}";
     }
 
-    public Task DeleteAsync(string fileUrl)
+    public Task DeleteAsync(string fileUrl, CancellationToken cancellationToken = default)
     {
         var relativePath = fileUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
         var fullPath = Path.Combine(_basePath, "..", relativePath);
@@ -251,12 +251,8 @@ public class LocalFileStorageService : IFileStorageService
             path.Split('/', '\\').Select(p => string.Concat(p.Where(c => char.IsLetterOrDigit(c) || c == '_' || c == '-'))));
 }
 
-// ─── SMS SERVICE ABSTRACTION ─────────────────────────────────────────────────
-
-public interface ISmsService
-{
-    Task SendAsync(string phoneNumber, string message);
-}
+// ─── SMS SERVICE IMPLEMENTATIONS ─────────────────────────────────────────────
+// Interfaces live in InnPay.Application.Interfaces (ISmsService, IEmailService).
 
 /// <summary>
 /// Console/log stub — replace with Termii, Twilio, or any Nigerian SMS provider.
@@ -268,13 +264,6 @@ public class ConsoleSmsService : ISmsService
         Console.WriteLine($"[SMS → {phoneNumber}] {message}");
         return Task.CompletedTask;
     }
-
-
-}
-
-public interface IEmailService
-{
-    Task SendAsync(string toEmail, string subject, string body);
 }
 
 public class ZohoEmailService : IEmailService

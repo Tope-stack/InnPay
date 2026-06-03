@@ -17,12 +17,12 @@ public class AuthController : BaseController
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _auth.LoginAsync(request);
+        var result = await _auth.LoginAsync(request, cancellationToken);
         return FromResult(result);
     }
 
@@ -31,12 +31,12 @@ public class AuthController : BaseController
     [HttpPost("refresh")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _auth.RefreshTokenAsync(request);
+        var result = await _auth.RefreshTokenAsync(request, cancellationToken);
         return FromResult(result);
     }
 
@@ -44,9 +44,9 @@ public class AuthController : BaseController
     [Authorize]
     [HttpPost("logout")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Logout()
+    public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
-        var result = await _auth.LogoutAsync(CurrentUserId);
+        var result = await _auth.LogoutAsync(CurrentUserId, cancellationToken);
         return FromResult(result);
     }
 
@@ -54,12 +54,12 @@ public class AuthController : BaseController
     [AllowAnonymous]
     [HttpPost("forgot-password")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _auth.ForgotPasswordAsync(request);
+        var result = await _auth.ForgotPasswordAsync(request, cancellationToken);
         return FromResult(result);
     }
 
@@ -68,12 +68,12 @@ public class AuthController : BaseController
     [HttpPost("reset-password")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await _auth.ResetPasswordAsync(request);
+        var result = await _auth.ResetPasswordAsync(request, cancellationToken);
         return FromResult(result);
     }
 }

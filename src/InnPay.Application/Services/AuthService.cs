@@ -26,7 +26,7 @@ public class AuthService : IAuthService
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<ServiceResult<AuthResponse>> LoginAsync(LoginRequest request)
+    public async Task<ServiceResult<AuthResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _uow.Users.GetByEmailAsync(request.Email.Trim().ToLowerInvariant());
         if (user is null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
@@ -46,7 +46,7 @@ public class AuthService : IAuthService
         var refreshToken = _tokenService.GenerateRefreshToken(user.Id);
 
         await _uow.RefreshTokens.AddAsync(refreshToken);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
         return ServiceResult<AuthResponse>.Success(new AuthResponse
         {
@@ -62,7 +62,7 @@ public class AuthService : IAuthService
         });
     }
 
-    public async Task<ServiceResult<AuthResponse>> RefreshTokenAsync(RefreshTokenRequest request)
+    public async Task<ServiceResult<AuthResponse>> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
     {
         var storedToken = await _uow.RefreshTokens.GetByTokenAsync(request.RefreshToken);
 
@@ -83,11 +83,10 @@ public class AuthService : IAuthService
 
         var newAccessToken = _tokenService.GenerateAccessToken(user, account);
         var newRefreshToken = _tokenService.GenerateRefreshToken(user.Id);
-        newRefreshToken.Token = newRefreshToken.Token;
         storedToken.ReplacedByToken = newRefreshToken.Token;
 
         await _uow.RefreshTokens.AddAsync(newRefreshToken);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
         return ServiceResult<AuthResponse>.Success(new AuthResponse
         {
@@ -103,14 +102,14 @@ public class AuthService : IAuthService
         });
     }
 
-    public async Task<ServiceResult> LogoutAsync(Guid userId)
+    public async Task<ServiceResult> LogoutAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         await _uow.RefreshTokens.RevokeAllForUserAsync(userId);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
         return ServiceResult.Success();
     }
 
-    public async Task<ServiceResult<OtpResponse>> ForgotPasswordAsync(ForgotPasswordRequest request)
+    public async Task<ServiceResult<OtpResponse>> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _uow.Users.GetByEmailAsync(request.Email.Trim().ToLowerInvariant());
 
@@ -123,7 +122,7 @@ public class AuthService : IAuthService
             });
 
         await _uow.Otps.InvalidateAllForUserAsync(user.Id, OtpPurpose.PasswordReset);
-        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, user.Email,OtpPurpose.PasswordReset);
+        await _otpService.GenerateAndSendOtpAsync(user.Id, user.PhoneNumber, user.Email, OtpPurpose.PasswordReset, cancellationToken);
 
         return ServiceResult<OtpResponse>.Success(new OtpResponse
         {
@@ -132,13 +131,13 @@ public class AuthService : IAuthService
         });
     }
 
-    public async Task<ServiceResult<OtpResponse>> ResetPasswordAsync(ResetPasswordRequest request)
+    public async Task<ServiceResult<OtpResponse>> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _uow.Users.GetByIdAsync(request.UserId);
         if (user is null)
             return ServiceResult<OtpResponse>.Fail("User not found.", 404);
 
-        var isValid = await _otpService.ValidateOtpAsync(user.Id, request.OtpCode, OtpPurpose.PasswordReset);
+        var isValid = await _otpService.ValidateOtpAsync(user.Id, request.OtpCode, OtpPurpose.PasswordReset, cancellationToken);
         if (!isValid)
             return ServiceResult<OtpResponse>.Fail("Invalid or expired OTP.", 422);
 
@@ -149,7 +148,7 @@ public class AuthService : IAuthService
 
         // Revoke all refresh tokens on password reset
         await _uow.RefreshTokens.RevokeAllForUserAsync(user.Id);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
         return ServiceResult<OtpResponse>.Success(new OtpResponse
         {
