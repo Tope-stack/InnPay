@@ -105,6 +105,109 @@ public enum CurrencyAccountModel
     StandaloneAccount = 2  // Model B — Corporate / upgraded Business
 }
 
+// ── Module 6: Payment Modules ────────────────────────────────────────────────
+
+public enum PaymentProvider
+{
+    Paystack = 1,       // NGN card & bank transfer
+    Flutterwave = 2,    // Multi-currency, Africa-wide
+    Stripe = 3          // International USD/EUR/GBP
+}
+
+public enum PaymentMethod
+{
+    BankTransfer = 1,
+    Card = 2,
+    WalletBalance = 3,
+    USSD = 4
+}
+
+public enum PaymentStatus
+{
+    Pending = 0,
+    Processing = 1,
+    Completed = 2,
+    Failed = 3,
+    Reversed = 4
+}
+
+public enum TransferStatus
+{
+    Pending = 0,
+    Completed = 1,
+    Failed = 2,
+    Reversed = 3
+}
+
+public enum TransferFrequency
+{
+    Daily = 1,
+    Weekly = 2,
+    Monthly = 3
+}
+
+public enum BillCategory
+{
+    Electricity = 1,
+    Airtime = 2,
+    Data = 3,
+    CableTV = 4,
+    Water = 5,
+    Internet = 6
+}
+
+public enum VirtualCardStatus
+{
+    Active = 1,
+    Frozen = 2,
+    Terminated = 3
+}
+
+public enum TripType
+{
+    OneWay = 1,
+    RoundTrip = 2,
+    MultiCity = 3
+}
+
+public enum BettingPlatform
+{
+    Bet9ja = 1,
+    Sportybet = 2,
+    OneXBet = 3
+}
+
+public enum ExternalTransferStatus
+{
+    Pending = 0,
+    Processing = 1,
+    Completed = 2,
+    Failed = 3
+}
+
+public enum WithdrawalStatus
+{
+    Pending = 0,
+    Processing = 1,
+    Completed = 2,
+    Failed = 3
+}
+
+public enum GiftCardStatus
+{
+    Purchased = 1,
+    Revealed = 2,
+    Sent = 3
+}
+
+public enum BookingStatus
+{
+    Pending = 0,
+    Confirmed = 1,
+    Failed = 2,
+    Cancelled = 3
+}
+
 public enum FxConversionStatus
 {
     Pending = 0,

@@ -6,6 +6,7 @@ using InnPay.Infrastructure.Repositories;
 using InnPay.Infrastructure.Services;
 using InnPay.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace InnPay.API.Extensions;
 
@@ -38,6 +39,17 @@ public static class ServiceExtensions
         services.AddScoped<IFxRateService, FxRateService>();
         services.AddScoped<IFxConversionService, FxConversionService>();
         services.AddScoped<ICurrencyPairConfigService, CurrencyPairConfigService>();
+        // Payment module (6.1 – 6.10)
+        services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
+        services.AddScoped<IBillsService, BillsService>();
+        services.AddScoped<IInternalTransferService, InternalTransferService>();
+        services.AddScoped<IExternalTransferService, ExternalTransferService>();
+        services.AddScoped<IVirtualAccountService, VirtualAccountService>();
+        services.AddScoped<IWithdrawalService, WithdrawalService>();
+        services.AddScoped<IVirtualCardService, VirtualCardService>();
+        services.AddScoped<IGiftCardService, GiftCardService>();
+        services.AddScoped<IFlightService, FlightService>();
+        services.AddScoped<IBetFundingService, BetFundingService>();
         return services;
     }
 
@@ -51,8 +63,21 @@ public static class ServiceExtensions
         // FX provider — registered as typed HttpClient
         services.AddHttpClient<IFxProviderService, OpenExchangeRatesFxProvider>();
 
-        // Background job: refresh FX rates every 60 s
+        // Background jobs
         services.AddHostedService<FxRateRefreshJob>();
+        services.AddHostedService<TransferScheduleJob>();
+
+        // Payment module providers — mock implementations (swap for real SDK in production)
+        // TODO: replace each Mock* with real implementation when API credentials are available
+        services.AddScoped<IPaystackProvider, MockPaystackProvider>();
+        services.AddScoped<IFlutterwaveProvider, MockFlutterwaveProvider>();
+        services.AddScoped<IStripeProvider, MockStripeProvider>();
+        services.AddScoped<IBillsProvider, MockBillsProvider>();
+        services.AddScoped<IVirtualAccountProvider, MockVirtualAccountProvider>();
+        services.AddScoped<ICardIssuerProvider, MockCardIssuerProvider>();
+        services.AddScoped<IGiftCardProvider, MockGiftCardProvider>();
+        services.AddScoped<IFlightProvider, MockFlightProvider>();
+        services.AddScoped<IBettingProvider, MockBettingProvider>();
 
         services.Configure<ZohoSmtpSettings>(configuration.GetSection("ZohoSmtp"));
         services.AddScoped<IEmailService, ZohoEmailService>();

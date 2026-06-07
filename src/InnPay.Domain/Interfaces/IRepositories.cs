@@ -110,5 +110,175 @@ public interface IUnitOfWork
     IFxRateLockRepository FxRateLocks { get; }
     IFxTransactionRepository FxTransactions { get; }
     ICurrencyPairConfigRepository CurrencyPairConfigs { get; }
+
+    // Payment module (6.1)
+    IPaymentRepository Payments { get; }
+
+    // Transfer module (6.3 internal, 6.4 external)
+    IInternalTransferRepository InternalTransfers { get; }
+    ITransferScheduleRepository TransferSchedules { get; }
+    ISavedBeneficiaryRepository SavedBeneficiaries { get; }
+    IExternalTransferRepository ExternalTransfers { get; }
+    ISavedBankAccountRepository SavedBankAccounts { get; }
+
+    // Bills module (6.2)
+    IBillPaymentRepository BillPayments { get; }
+
+    // Virtual accounts & withdrawals (6.5, 6.6)
+    IVirtualAccountRepository VirtualAccounts { get; }
+    IWithdrawalRepository Withdrawals { get; }
+
+    // Virtual card module (6.7)
+    IVirtualCardRepository VirtualCards { get; }
+    ICardTransactionRepository CardTransactions { get; }
+
+    // Gift card module (6.8)
+    IGiftCardPurchaseRepository GiftCardPurchases { get; }
+
+    // Flight module (6.9)
+    IFlightBookingRepository FlightBookings { get; }
+
+    // Bet funding module (6.10)
+    IBetFundingRepository BetFundings { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+}
+
+// ── Module 6: Repository Interfaces ─────────────────────────────────────────
+
+// 6.1 — Universal Payment Gateway
+public interface IPaymentRepository
+{
+    Task<Payment?> GetByIdAsync(Guid id);
+    Task<Payment?> GetByIdempotencyKeyAsync(string idempotencyKey);
+    Task<Payment?> GetByReferenceAsync(string reference);
+    Task<IEnumerable<Payment>> GetByAccountIdAsync(Guid accountId, int page = 1, int pageSize = 20);
+    Task AddAsync(Payment payment);
+    Task UpdateAsync(Payment payment);
+}
+
+// 6.3 — Internal Transfer
+public interface IInternalTransferRepository
+{
+    Task<InternalTransfer?> GetByIdAsync(Guid id);
+    Task<InternalTransfer?> GetByReferenceAsync(string reference);
+    Task<IEnumerable<InternalTransfer>> GetBySenderAccountIdAsync(Guid accountId, int page = 1, int pageSize = 20);
+    Task<IEnumerable<InternalTransfer>> GetByAccountIdAsync(Guid accountId, int page = 1, int pageSize = 20);
+    Task AddAsync(InternalTransfer transfer);
+    Task UpdateAsync(InternalTransfer transfer);
+}
+
+public interface ITransferScheduleRepository
+{
+    Task<IEnumerable<TransferSchedule>> GetDueSchedulesAsync(DateTime asOf);
+    Task<IEnumerable<TransferSchedule>> GetByAccountIdAsync(Guid accountId);
+    Task<TransferSchedule?> GetByIdAsync(Guid id);
+    Task AddAsync(TransferSchedule schedule);
+    Task UpdateAsync(TransferSchedule schedule);
+}
+
+public interface ISavedBeneficiaryRepository
+{
+    Task<IEnumerable<SavedBeneficiary>> GetByOwnerAccountIdAsync(Guid ownerAccountId);
+    Task<SavedBeneficiary?> GetByIdAsync(Guid id);
+    Task<bool> ExistsAsync(Guid ownerAccountId, Guid beneficiaryAccountId);
+    Task AddAsync(SavedBeneficiary beneficiary);
+    Task DeleteAsync(Guid id);
+}
+
+// 6.4 — External Transfer
+public interface IExternalTransferRepository
+{
+    Task<ExternalTransfer?> GetByIdAsync(Guid id);
+    Task<ExternalTransfer?> GetByReferenceAsync(string reference);
+    Task<decimal> GetSevenDayAverageAsync(Guid id);
+    Task<IEnumerable<ExternalTransfer>> GetByAccountIdAsync(Guid accountId, int page = 1, int pageSize = 20);
+    Task AddAsync(ExternalTransfer transfer);
+    Task UpdateAsync(ExternalTransfer transfer);
+}
+
+public interface ISavedBankAccountRepository
+{
+    Task<IEnumerable<SavedBankAccount>> GetByAccountIdAsync(Guid accountId);
+    Task<SavedBankAccount?> GetByIdAsync(Guid id);
+    Task AddAsync(SavedBankAccount bankAccount);
+    Task DeleteAsync(Guid id);
+}
+
+// 6.2 — Bills
+public interface IBillPaymentRepository
+{
+    Task<BillPayment?> GetByIdAsync(Guid id);
+    Task<BillPayment?> GetByReferenceAsync(string reference);
+    Task<IEnumerable<BillPayment>> GetByAccountIdAsync(Guid accountId, int page = 1, int pageSize = 20);
+    Task AddAsync(BillPayment billPayment);
+    Task UpdateAsync(BillPayment billPayment);
+}
+
+// 6.5 — Virtual Accounts
+public interface IVirtualAccountRepository
+{
+    Task<VirtualAccount?> GetByIdAsync(Guid id);
+    Task<VirtualAccount?> GetByAccountNumberAsync(string accountNumber);
+    Task<VirtualAccount?> GetPrimaryByAccountIdAsync(Guid accountId);
+    Task<IEnumerable<VirtualAccount>> GetByAccountIdAsync(Guid accountId);
+    Task AddAsync(VirtualAccount virtualAccount);
+    Task UpdateAsync(VirtualAccount virtualAccount);
+}
+
+// 6.6 — Withdrawals
+public interface IWithdrawalRepository
+{
+    Task<Withdrawal?> GetByIdAsync(Guid id);
+    Task<Withdrawal?> GetByReferenceAsync(string reference);
+    Task<IEnumerable<Withdrawal>> GetByAccountIdAsync(Guid accountId, int page = 1, int pageSize = 20);
+    Task<decimal> GetSevenDayAverageAsync(Guid walletId);
+    Task AddAsync(Withdrawal withdrawal);
+    Task UpdateAsync(Withdrawal withdrawal);
+}
+
+// 6.7 — Virtual Card
+public interface IVirtualCardRepository
+{
+    Task<VirtualCard?> GetByIdAsync(Guid id);
+    Task<VirtualCard?> GetByProviderCardIdAsync(string providerCardId);
+    Task<IEnumerable<VirtualCard>> GetByAccountIdAsync(Guid accountId);
+    Task AddAsync(VirtualCard card);
+    Task UpdateAsync(VirtualCard card);
+}
+
+public interface ICardTransactionRepository
+{
+    Task<IEnumerable<CardTransaction>> GetByCardIdAsync(Guid cardId, int page = 1, int pageSize = 20);
+    Task AddAsync(CardTransaction transaction);
+}
+
+// 6.8 — Gift Cards
+public interface IGiftCardPurchaseRepository
+{
+    Task<GiftCardPurchase?> GetByIdAsync(Guid id);
+    Task<GiftCardPurchase?> GetByReferenceAsync(string reference);
+    Task<IEnumerable<GiftCardPurchase>> GetByAccountIdAsync(Guid accountId, int page = 1, int pageSize = 20);
+    Task AddAsync(GiftCardPurchase purchase);
+    Task UpdateAsync(GiftCardPurchase purchase);
+}
+
+// 6.9 — Flights
+public interface IFlightBookingRepository
+{
+    Task<FlightBooking?> GetByIdAsync(Guid id);
+    Task<FlightBooking?> GetByReferenceAsync(string reference);
+    Task<IEnumerable<FlightBooking>> GetByAccountIdAsync(Guid accountId, int page = 1, int pageSize = 20);
+    Task AddAsync(FlightBooking booking);
+    Task UpdateAsync(FlightBooking booking);
+}
+
+// 6.10 — Bet Funding
+public interface IBetFundingRepository
+{
+    Task<BetFunding?> GetByIdAsync(Guid id);
+    Task<BetFunding?> GetByReferenceAsync(string reference);
+    Task<IEnumerable<BetFunding>> GetByAccountIdAsync(Guid accountId, int page = 1, int pageSize = 20);
+    Task AddAsync(BetFunding funding);
+    Task UpdateAsync(BetFunding funding);
 }
